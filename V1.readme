@@ -1,0 +1,7 @@
+Tokens: 341/1024
+Results Vs EvilBot: +40 =20 -0
+
+Improvements:
+- Implemented an evaluation method that simply counts up each player's material
+- Implemented a basic minimax algorithm so my bot can see moves in the future
+- Currently has a max search depth of 3, adding more depth takes too long.
