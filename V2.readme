@@ -5,6 +5,5 @@ Results Vs V1: +16 =3 -1
 Impprovements:
 - Implemented alpha-beta pruning to speed up the search. Increased depth to 4 from 3
 - Implemented basic move priority by putting captures first in the moves array
-- Implemented a visited positions with Zobrist keys
 - Decrease eval if the player is in check
 - Immediately return 0 in minimax if the passed in position is a draw
