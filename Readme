@@ -40,3 +40,22 @@ Notes:
 - Piece value charts do not account for board orientation, which leads to some interesting complications
 - The piece value charts have somewhat arbitrary values that need to be significantly fine tuned
 - Bot struggles to checkmate in one sometimes, which is very weird
+
+
+Version 4:
+
+Tokens: 556
+Results Vs v3: +16 =2 -6
+Results VS v2: +18 =2 -7
+
+Improvements: 
+- Added piece charts for black pieces and improved on the chart values
+- Improved move priority simply by sorting by captured piece value
+- Slightly altered piece values
+- Got rid of missing mate in 1 issue
+
+Notes:
+- I am not sure why It didn't perform well against V2, although I am convinced this bot is stronger
+- In order to fix the mate in 1 bug, I have to check for checkmate after initiating every move in the think funciton. I am not sure why this is neccisary 
+- Still makes unsound sacrafices
+
