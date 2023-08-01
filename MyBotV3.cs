@@ -171,7 +171,7 @@ public class MyBot : IChessBot
         }
 
         if (board.IsInCheck())
-            eval += board.IsWhiteToMove ? -1 : 1; //Subtract 1 from the player in check
+            eval += board.IsWhiteToMove ? -100 : 100; //Subtract 1 from the player in check
 
         return eval; 
     }
