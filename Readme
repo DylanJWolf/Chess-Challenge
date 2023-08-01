@@ -9,6 +9,7 @@ Improvements:
 - Implemented a basic minimax algorithm so my bot can see moves in the future
 - Currently has a max search depth of 3, adding more depth takes too long.
 
+
 Version 2:
 
 Tokens: 469
@@ -20,3 +21,17 @@ Impprovements:
 - Implemented basic move priority by putting captures first in the moves array
 - Decrease eval if the player is in check
 - Immediately return 0 in minimax if the passed in position is a draw
+
+
+Version 3:
+
+Tokens: 522
+Results Vs V2: +31 =5 -14
+
+Improvements:
+
+Notes:
+- lost to timeout 8 times in 50 games against V2
+- Piece value charts do not account for board orientation, which leads to some interesting complications
+- The piece value charts have somewhat arbitrary values that need to be significantly fine tuned
+- Bot struggles to checkmate in one sometimes, which is very weird
