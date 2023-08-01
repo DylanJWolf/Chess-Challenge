@@ -30,6 +30,10 @@ Results Vs V2: +31 =5 -14
 Results Vs V1: +15 =0 -1
 
 Improvements:
+- Replaced piece value dictionary with an int array to save tokens
+- Use bitboard in evaluation function to quickly calculate total base piece values and in fewer tokens
+- Implemented piece value charts using bitboard layers
+
 
 Notes:
 - lost to timeout 8 times in 50 games against V2
