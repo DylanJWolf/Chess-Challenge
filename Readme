@@ -59,3 +59,16 @@ Notes:
 - In order to fix the mate in 1 bug, I have to check for checkmate after initiating every move in the think funciton. I am not sure why this is neccisary 
 - Still makes unsound sacrafices
 
+Version 5 (The search update)
+Tokens: 781
+Results Vs V4: +61 =0 -1
+
+Improvements:
+- Added iterative deepning
+- Added transition tables
+- Added Quiescence
+
+Notes:
+- The search could still be improved with null move pruning and maybe better move ordering?
+
+
