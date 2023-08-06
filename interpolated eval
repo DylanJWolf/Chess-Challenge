@@ -1,0 +1,255 @@
+public class MyBot : IChessBot
+{
+
+    private int[] pieceValues = {82, 337, 365, 477, 1025, 0, 94, 281, 297, 512, 936, 0 };
+    private int[] phaseWeights = { 0, 1, 1, 2, 4, 0 };
+
+    Move bestmoveRoot = Move.NullMove;
+
+    /*
+    These are what I call "Bitlayers". This is my inplementation of piece-square tables.
+    Normally you would use a 64-int array to store a PSTB. However, this uses way too many tokens (64 * 6 = 384 tokens at a minimum)
+    This approach uses only 30 tokens to store 6 piece charts with 5 bitboard layers each. More layers = more accurate value chart
+    The layered bitboards allow us to increase the value of a square by summing the bitlayers. Also, we can use bitwise and to quickly calculate the valuation.
+    */
+    private ulong[] pieceCharts =
+    {
+        //Pawms MG
+        0b1111111111111111111111101111111001111110011111110100111011111111,
+        0b0000000011111110001111100001101000001000000000100000011000000000,
+        0b0000000011111100000011000000000000000000000000000000000000000000,
+        0b0000000011010100000000000000000000000000000000000000000000000000,
+        0b0000000001000100000000000000000000000000000000000000000000000000,
+        //Pawns EG
+        0b0000000011111111111111111110001110000000000000001000100000000000,
+        0b0000000011111111111111110000000000000000000000000000000000000000,
+        0b0000000011111111110000000000000000000000000000000000000000000000,
+        0b0000000011111111000000000000000000000000000000000000000000000000,
+        0b0000000011000001000000000000000000000000000000000000000000000000,
+        //Knights MG
+        0b0111111111111111111111111111111111111111111111111111111111111111,
+        0b0011101011111111111111111111111111111111111111111111111101111111,
+        0b0000101000111111011111111111111111111111011111110011111000001000,
+        0b0000100000100100010111110001010000000000000000000000000000000000,
+        0b0000000000000000000001000000000000000000000000000000000000000000,
+        //Knights EG
+        0b1111111011111111111111111111111111111111111111111111111111111111,
+        0b1111110011111111111111111111111111111111111111111111111111111110,
+        0b0011110011111110111111101111111111111111111111110111111010111100,
+        0b0000000001011000001111000111111001111110011111000011100000000000,
+        0b0000000000000000000000000011100000111100000100000000000000000000,
+        //Bishops MG
+        0b1101111111111111111111111111111111111111111111111111111111111111,
+        0b1101101111111110111111111111111111111111111111111111111111111111,
+        0b0100001101001110011111111111111111111111111111111111111101000000,
+        0b0000000000001110011111100011110000011000000001100000011000000000,
+        0b0000000000000100000001000001000000000000000000000000000000000000,
+        //Bishops EG
+        0b1111111011111111111111111111111111111111111111111111111001011111,
+        0b0011110011111110111111111111111111111111111111100011110001011010,
+        0b0000000000101000101111111111111101111110011111000001100000000000,
+        0b0000000000100000000001000111110000111100001110000000000000000000,
+        0b0000000000000000000000000000000000010000000000000000000000000000,
+        //Rooks MG
+        0b1111111111111111111111111111111111111111111111111111111011111111,
+        0b1111111111111111111111111111111100111111011111100111111011111100,
+        0b1111111111111111011111110011110000001010000000000000010000011100,
+        0b0101100100111101000101100000010000000000000000000000000000000000,
+        0b0000000000001100000000000000000000000000000000000000000000000000,
+        //Rooks EG
+        0b1111111111111111111111111111111111111111111111111111111111111110,
+        0b1111111111111111111111111111111111111110111110101111000101111010,
+        0b1111111111110111111110001111110111110000010000000011000001100010,
+        0b1111111011110010111000000010000000100000000000000000000000000000,
+        0b0011000000000000000000000000000000000000000000000000000000000000,
+        //Queen MG
+        0b1111111111111111111111111111111111111111111111111111111111111110,
+        0b0111111100111111111111110011111110111111111111110111111110111000,
+        0b0011111100000111001111110000010000000000000000110010110000010000,
+        0b0010111100000111000011110000000000000000000000000000000000000000,
+        0b0000100000000101000001010000000000000000000000000000000000000000,
+        //Queen  EG
+        0b1111111111111111111111111111111111111111111111111111110101101110,
+        0b1111111101111111011111111111111101111111001111110000000000001000,
+        0b0111111101111110001111110111111101111111001011100000000000000000,
+        0b0000000000111010000111000001111101011110000000000000000000000000,
+        0b0000000000001000000100000000101000000000000000000000000000000000,
+        //Kings MG
+        0b0111011111111111111111111111111111111111111111111110111111111111,
+        0b0111011111111101111111111111111001100010111001111110011111101111,
+        0b0110001111011100111001100010001001000000110000001110001101101011,
+        0b0110000110000000010001100000000000000000000000000100001101101011,
+        0b0000000010000000000000000000000000000000000000000000000001000000,
+        //Kings EG
+        0b0111111111111111111111111111111111111111111111111111111111111111,
+        0b0111111111111111111111111111111111111111111111111111111101111110,
+        0b0000111011111111111111111111111101111111011111110111111000010100,
+        0b0000010001111111111111110111111000111100001111000001100000000000,
+        0b0000000000000100000001100000000000000000000000000000000000000000,
+    };
+
+
+    //Takes in a ulong and flips it 
+    //Important to note that this flips it both vertically and horizontally. I honestly don't know why, but it needs to do both...
+    private ulong FlipBitboard(ulong bitlayer)
+    {
+        ulong baseLayer = 0b0000000000000000000000000000000000000000000000000000000000000000;
+        while (bitlayer > 0)
+            //Passing the baseLayer could cause some problems maybe?
+            BitboardHelper.SetSquare(ref baseLayer, new Square(63 - BitboardHelper.ClearAndGetIndexOfLSB(ref bitlayer))); //63 - instead of 56 ^ to flip vertically and horizontally
+        return baseLayer;
+    }
+
+    struct TTEntry
+    {
+        public ulong key;
+        public Move move;
+        public int depth, score, bound;
+        public TTEntry(ulong _key, Move _move, int _depth, int _score, int _bound)
+        {
+            key = _key; move = _move; depth = _depth; score = _score; bound = _bound;
+        }
+    }
+
+    const int entries = (1 << 20);
+    TTEntry[] tt = new TTEntry[entries];
+
+    //Iterates through eaach legal move and evaluates that move using the MiniMax function
+    public Move Think(Board board, Timer timer)
+    {
+        bestmoveRoot = Move.NullMove;
+        for (int depth = 1; depth <= 50; depth++)
+        {
+            Search(board, timer, -30000, 30000, depth, 0);
+
+            Console.WriteLine(depth);
+
+            // Out of time
+            if (timer.MillisecondsElapsedThisTurn >= timer.MillisecondsRemaining / 30)
+                break;
+        }
+        return bestmoveRoot.IsNull ? board.GetLegalMoves()[0] : bestmoveRoot;
+    }
+
+    //Evaluates a move based on the resulting board position
+    public int Search(Board board, Timer timer, int alpha, int beta, int depth, int ply)
+    {
+        ulong key = board.ZobristKey;
+        bool qsearch = depth <= 0;
+        bool notRoot = ply > 0;
+        int best = -30000;
+
+        // Check for repetition (this is much more important than material and 50 move rule draws)
+        if (board.IsDraw())
+            return 0;
+
+        TTEntry entry = tt[key % entries];
+
+        // TT cutoffs
+        if (notRoot && entry.key == key && entry.depth >= depth && (
+            entry.bound == 3 // exact score
+                || entry.bound == 2 && entry.score >= beta // lower bound, fail high
+                || entry.bound == 1 && entry.score <= alpha // upper bound, fail low
+        )) return entry.score;
+
+        int eval = EvaluatePosition(board);
+
+        // Quiescence search is in the same function as negamax to save tokens
+        if (qsearch)
+        {
+            best = eval;
+            if (best >= beta) return best;
+            alpha = Math.Max(alpha, best);
+        }
+
+        // Generate moves, only captures in qsearch
+        Move[] moves = board.GetLegalMoves(qsearch);
+        int[] scores = new int[moves.Length];
+
+        // Score moves
+        for (int i = 0; i < moves.Length; i++)
+        {
+            Move move = moves[i];
+            // TT move
+            if (move == entry.move) scores[i] = 1000000;
+            // https://www.chessprogramming.org/MVV-LVA
+            else if (move.IsCapture) scores[i] = 100 * (int)move.CapturePieceType - (int)move.MovePieceType;
+        }
+
+        Move bestMove = Move.NullMove;
+        int origAlpha = alpha;
+
+        // Search moves
+        for (int i = 0; i < moves.Length; i++)
+        {
+            if (timer.MillisecondsElapsedThisTurn >= timer.MillisecondsRemaining / 30) return 30000;
+
+            // Incrementally sort moves
+            for (int j = i + 1; j < moves.Length; j++)
+            {
+                if (scores[j] > scores[i])
+                    (scores[i], scores[j], moves[i], moves[j]) = (scores[j], scores[i], moves[j], moves[i]);
+            }
+
+            Move move = moves[i];
+
+            board.MakeMove(move);
+            int score = -Search(board, timer, -beta, -alpha, depth - 1, ply + 1);
+            board.UndoMove(move);
+
+            if (score > best)
+            {
+                best = score;
+                bestMove = move;
+                if (ply == 0) bestmoveRoot = move;
+                alpha = Math.Max(alpha, score);
+                if (alpha >= beta) break;
+            }
+        }
+
+        // (Check/Stale)mate
+        if (!qsearch && moves.Length == 0) return board.IsInCheck() ? -30000 + ply : 0;
+
+        // Did we fail high/low or get an exact score?
+        int bound = best >= beta ? 2 : best > origAlpha ? 3 : 1;
+
+        // Push to TT
+        tt[key % entries] = new TTEntry(key, bestMove, depth, best, bound);
+
+        return best;
+    }
+
+    //Returns an evaluation for the board state. + for white, - for black.
+    private int EvaluatePosition(Board board)
+    {
+        int mgEval = 0, egEval = 0, phase = 0;
+
+        foreach (bool color in new[] { true, false })
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                //First we calculate the difference in base values of all the peices
+                ulong piecesBitboard = board.GetPieceBitboard((PieceType)(i + 1), color);
+                piecesBitboard = color ? piecesBitboard : FlipBitboard(piecesBitboard); //Flip board so black's pieces line up with the PSTB
+                int count = BitboardHelper.GetNumberOfSetBits(piecesBitboard);
+                mgEval += count * pieceValues[i];
+                egEval += count * pieceValues[i + 6];
+                phase += count * phaseWeights[i]; //More pieces on board = lower phase value
+
+                //Now we account for "bonus" value based on the pieces positions on the board
+                //Magic number 5 is the number of bitlayers we have
+                for (int j = 0; j < 5; j++)
+                {
+                    ulong mgBitLayer = pieceCharts[i * 10 + j], egBitLayer = pieceCharts[i * 10 + j + 5];
+                    mgEval += BitboardHelper.GetNumberOfSetBits(piecesBitboard & mgBitLayer) * 10;
+                    egEval += BitboardHelper.GetNumberOfSetBits(piecesBitboard & egBitLayer) * 10;
+                }
+            }
+            mgEval = -mgEval;
+            egEval = -egEval;
+        }
+
+        return (mgEval * phase + egEval * (24 - phase)) / 24 * (board.IsWhiteToMove ? 1 : -1);
+    }
+
+}
