@@ -72,3 +72,16 @@ Notes:
 - The search could still be improved with null move pruning and maybe better move ordering?
 
 
+Version 6:
+Tokens: 781
+Results Vs V5: +125 = 144 -101
+
+Improvements:
+- Added pregenerated piece-value lookup tables. This speeds up the search and allows us to reach a higher average depth
+- Token optimizations
+
+Notes: 
+- I tried lots of different ways to impprove the eval, including king safety, interpolated eval, and piece mobility. It improves the bots play, but at a significant time loss.
+
+
+
