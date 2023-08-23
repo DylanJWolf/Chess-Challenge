@@ -84,4 +84,11 @@ Notes:
 - I tried lots of different ways to impprove the eval, including king safety, interpolated eval, and piece mobility. It improves the bots play, but at a significant time loss.
 
 
+Vewrsion 7:
+Tokens: 821
+Results Vs V5: +222 =134 -111
+
+Improvements:
+- Fixed issue where bot does not play checkmate in 1 because is has the same eval as mate in 2, mate in 3, and so on
+- Added new PSTB for kings in the end game that encourages them to go forward and conversly trap the opponent king on the side
 
